@@ -2,7 +2,9 @@ import critical
 import precedence
 import tkinter as tk
 
+
 class Gannt():
+
     def __init__(
         self,
             critical_act,
@@ -20,7 +22,6 @@ class Gannt():
         any other arguments to be passed to tk.TK
         """
         raise NotImplementedError
-
 
     def draw(self):
         """Draw a complete gannt chart"""
@@ -94,12 +95,10 @@ class Gannt():
         x = left_axis_space
         time = 0
         while x < self.width - right_space:
-            self._draw_grid_line(x,top_axis_space, bottom_space)
-            self._write_text(x, top_axis_space//2, time)
+            self._draw_grid_line(x, top_axis_space, bottom_space)
+            self._write_text(x, top_axis_space // 2, time)
             x += pixel_gap
             time += time_gap
-
-
 
     def show(self):
         """Shows the gannt chart on the screen, if possible"""
@@ -109,7 +108,9 @@ class Gannt():
         """Save the gannt chart to disk, if possible"""
         raise NotImplementedError
 
+
 class GanntPIL(Gannt):
+
     def __init__(
         self,
             critical_act,
@@ -125,37 +126,41 @@ class GanntPIL(Gannt):
         self.critical = critical_act
         self.non_critical = non_critical
 
-        self.image = Image.new(mode='RGB', size=[width, height],color='white')
+        self.image = Image.new(mode='RGB', size=[width, height], color='white')
         self.drawable = ImageDraw.Draw(self.image)
 #       self.font = ImageFont
 
-    def _draw_critical(self,label,x0,y0,x1,y1):
-        self.drawable.rectangle([x0,y0,x1,y1],fill='white',outline='black')
-        self.drawable.text([(x0+x1)//2, (y0+y1)//2],label, fill='black')
+    def _draw_critical(self, label, x0, y0, x1, y1):
+        self.drawable.rectangle(
+            [x0, y0, x1, y1], fill='white', outline='black')
+        self.drawable.text([(x0 + x1) // 2, (y0 + y1) // 2],
+                           label, fill='black')
 
-    def _draw_noncritical(self,label,x0,y0,x1,y1,x2):
-        self.drawable.rectangle([x0,y0,x1,y1],fill='white',outline='black')
-        self.drawable.text([(x0+x1)//2, (y0+y1)//2],label, fill='black')
-        self.drawable.rectangle([x1, y0, x2, y1], fill='#aaaaaa',outline='black')
-
+    def _draw_noncritical(self, label, x0, y0, x1, y1, x2):
+        self.drawable.rectangle(
+            [x0, y0, x1, y1], fill='white', outline='black')
+        self.drawable.text([(x0 + x1) // 2, (y0 + y1) // 2],
+                           label, fill='black')
+        self.drawable.rectangle(
+            [x1, y0, x2, y1], fill='#aaaaaa', outline='black')
 
     def show(self):
         root = tk.Tk()
         img = ImageTk.PhotoImage(self.image)
-        panel = tk.Label(root, image = img)
-        panel.pack(side='bottom', fill='both', expand= 'yes')
+        panel = tk.Label(root, image=img)
+        panel.pack(side='bottom', fill='both', expand='yes')
         root.mainloop()
 
     def save(self, filename):
-       self.image.save(filename) 
-    
-    def _draw_grid_line(self, x,top_axis_space, bottom_space):
-         self.drawable.line([ int(x), top_axis_space, int(x), self.height -
-                             bottom_space], fill='black')
+        self.image.save(filename)
 
-    def _write_text(self,x,y,text):
-        self.drawable.text([x, 0], str(text) )
- 
+    def _draw_grid_line(self, x, top_axis_space, bottom_space):
+        self.drawable.line([int(x), top_axis_space, int(x), self.height -
+                            bottom_space], fill='black')
+
+    def _write_text(self, x, y, text):
+        self.drawable.text([x, 0], str(text))
+
 
 class GanntTk(tk.Tk, Gannt):
     """Draw a gannt chart from a list of critical and non critical activities
@@ -178,7 +183,7 @@ class GanntTk(tk.Tk, Gannt):
         any other arguments to be passed to tk.TK
         """
         super().__init__(*args, **kwargs)
-        self.title( "Gannt Chart")
+        self.title("Gannt Chart")
         self.canvas = tk.Canvas(self, width=width, height=height)
         self.canvas.pack()
         self.width = width
@@ -186,17 +191,16 @@ class GanntTk(tk.Tk, Gannt):
         self.critical = critical_act
         self.non_critical = non_critical
 
-    def _draw_grid_line(self, x,top_axis_space, bottom_space):
-         self.canvas.create_line(
-                int(x),
-                top_axis_space,
-                int(x),
-                self.height -
-                bottom_space)
+    def _draw_grid_line(self, x, top_axis_space, bottom_space):
+        self.canvas.create_line(
+            int(x),
+            top_axis_space,
+            int(x),
+            self.height -
+            bottom_space)
 
-    def _write_text(self,x,y,text):
+    def _write_text(self, x, y, text):
         self.canvas.create_text(x, y, text=str(text))
- 
 
     def _draw_critical(self, label, x0, y0, x1, y1):
         """Draw and label critical activity at the position indicated"""
@@ -243,9 +247,9 @@ def main():
     c.forward_pass()
     c.back_pass()
     c.set_critical()
-    critical.make_dot(c,"act_net.dot")
+    critical.make_dot(c, "act_net.dot")
 
-    i = GanntPIL(c.critical, c.non_critical, 600,400)
+    i = GanntTk(c.critical, c.non_critical, 600, 400)
     i.draw()
     i.show()
     i.save("gannt.png")
