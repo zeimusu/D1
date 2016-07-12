@@ -1,5 +1,5 @@
 from actnet import Network
-
+import precedence
 
 class Critical_Network(Network):
 
@@ -79,82 +79,83 @@ class Critical_Network(Network):
 
     def split_into_paths(self):
         critical = self.critical
-        paths  = [[critical[0]]]
+        paths = [[critical[0]]]
 
         for i in range(1, len(critical)):
-            new_paths =[]
+            new_paths = []
             for p in paths:
                 if p[-1][2] == critical[i][1]:
                     p.append(critical[i])
                 elif p[-1][1] == critical[i][1]:
                     new_paths.append(p[:])
-                    new_paths[-1][-1] =  critical[i]
-            if len(new_paths)>0:
+                    new_paths[-1][-1] = critical[i]
+            if len(new_paths) > 0:
                 paths += new_paths
-        return paths 
+        return paths
+
+
+def make_dot(critical_network):
+    """Draw a graph in dot format from a network with floats calculated
+    the critical activities are highlighted"""
+    dot_text = 'digraph critical {\nrankdir=LR;\n'
+    
+    for event in critical_network.events.values():
+        #add a all events with record type
+        dot_text += '{label} [shape=record, label="<f0> {early}|<f1> \
+{late}"];\n'.format(label=event.label, 
+                early=event.early_time, 
+                late=event.late_time)
+    dot_text += 'edge [color=red];\n'
+    for arc in critical_network.critical:
+        #[label, start, end]
+        activity_label = arc[0]
+        activity = critical_network.activities[activity_label]
+        event1, event2 = activity.events
+        dot_text+='{event1label} -> {event2label} \
+[label="{act_label}"];\n'.format(event1label=event1.label, 
+                                event2label=event2.label, 
+                                act_label=activity_label)
+    dot_text+='edge [color=black];\n'
+    for arc in critical_network.non_critical:
+        activity_label = arc[0]
+        activity = critical_network.activities[activity_label]
+        event1, event2 = activity.events
+        dot_text+='{event1label} -> {event2label} \
+[label="{act_label}"];\n'.format(event1label=event1.label, 
+                                event2label=event2.label,
+                                act_label=activity_label)
+    for arc_label in critical_network.activities:
+        if arc_label[:5] == 'dummy':
+            activity = critical_network.activities[arc_label]
+            event1, event2 = activity.events
+            dot_text += '{e1label} -> {e2label} [style=dotted];\n'.format(
+                e1label=event1.label,
+                e2label=event2.label)
+    dot_text+="}"
+    print(dot_text)
+
 
 
 def main():
-    p = [
-        ["A", [], 2],
-        ["B", [], 7],
-        ["C", ["A"], 4],
-        ["D", ["A"], 3],
-        ["E", ["C"], 2],
-        ["F", ["B", "D"], 4],
-        ["G", ["B"], 1]
-    ]
-
-    p = [
-        ["A", [], 10],
-        ["B", [], 14],
-        ["C", ["A"], 11],
-        ["D", ["B"], 5],
-        ["E", ["B"], 15],
-        ["F", ["B"], 20],
-        ["G", ["C", "D"], 8],
-        ["H", ["C", "D"], 12],
-        ["I", ["G"], 16],
-        ["J", ["E", "H"], 10],
-        ["K", ["E", "H"], 21],
-        ["L", ["E", "H"], 6],
-        ["M", ["I", "J"], 9],
-        ["N", ["F", "L"], 12],
-    ]
-
     c = Critical_Network()
-    c.make_network_from_table(p)
+    c.make_network_from_table(precedence.mix1)
     c.renumber()
-    for a in c.activities.values():
-        print(a)
 
     c.forward_pass()
     for e in c.events:
         ee = c.events[e]
-        print(ee.label, ee.early_time)
     c.back_pass()
 
     for e in c.events:
         ee = c.events[e]
-        print(ee.label, ee.early_time, ee.late_time)
 
-    for a in c.activities:
-        print(a, c.float(a))
 
     c.set_critical()
-    print(c.critical)
-    print(c.non_critical)
+    #print(c.critical)
+    #print(c.non_critical)
+    #print(c.split_into_paths())
 
-    print(split_into_paths(c.critical))
+    make_dot(c)
+
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-    
-
-    
