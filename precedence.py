@@ -1,3 +1,6 @@
+"""
+A collection of precedence tables, for use in the actnet, critical and gannt modules
+"""
 p1 = [
     ["A", [], 11],
     ["B", [], 18],
